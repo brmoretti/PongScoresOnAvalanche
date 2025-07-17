@@ -1,18 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.30;
 
-import "./playersfactory.sol";
+import "./playershelper.sol";
 
-contract PlayersActions is PlayersFactory {
+contract PlayersActions is PlayersHelper {
 
 	event ChangedName(uint16 playerId, string newName);
 	event PlayerWon(uint16 playerId, uint16 winCount);
 	event PlayerLost(uint16 playerId, uint16 lossCount);
-
-	modifier checkPlayerExistence(uint16 id) {
-		require(id < playerCount, "Player does not exist");
-		_;
-	}
 
 	function changePlayerName(uint16 playerId, string memory newName)
 	checkPlayerExistence(playerId) internal {

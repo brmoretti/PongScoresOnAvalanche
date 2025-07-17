@@ -17,7 +17,7 @@ contract PlayersFactory {
 
 	Player[] public	players;
 
-	function createPlayer(string memory name, bool isAi) external {
+	function createPlayer(string memory name, bool isAi) public {
 		Player memory	newPlayer = Player({
 			name: name,
 			isAi: isAi,
