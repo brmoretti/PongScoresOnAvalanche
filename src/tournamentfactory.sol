@@ -5,7 +5,8 @@ import "./playersfactory.sol";
 import "./playersactions.sol";
 
 contract TournamentFactory is PlayersFactory, PlayersActions {
-	event NewTournament();
+
+	event NewTournament(uint16 tounamentId, string tournamentName);
 
 	uint16 public tournamentCount = 0;
 	uint16 public matchCount = 0;
@@ -132,6 +133,7 @@ contract TournamentFactory is PlayersFactory, PlayersActions {
 		});
 
 		tournaments.push(newTournament);
+		emit NewTournament(newTournament.tournamentId, newTournament.name);
 		tournamentCount++;
 	}
 
