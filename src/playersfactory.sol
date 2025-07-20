@@ -8,11 +8,12 @@ contract PlayersFactory {
 	uint16 public playerCount = 0;
 
 	struct Player {
-		string	name;
-		bool	isAi;
-		uint16	playerId;
-		uint16	winCount;
-		uint16	lossCount;
+		string		name;
+		bool		isAi;
+		uint16		playerId;
+		uint16		winCount;
+		uint16		lossCount;
+		uint16[]	matchesIds;
 	}
 
 	Player[] public	players;
@@ -23,7 +24,8 @@ contract PlayersFactory {
 			isAi: isAi,
 			playerId: playerCount,
 			winCount: 0,
-			lossCount: 0
+			lossCount: 0,
+			matchesIds: new uint16[](0)
 		});
 		players.push(newPlayer);
 		playerCount++;

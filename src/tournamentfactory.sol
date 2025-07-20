@@ -11,9 +11,11 @@ contract TournamentFactory is PlayersFactory, PlayersActions {
 	uint16 public matchCount = 0;
 
 	struct Match {
-		uint16 player1;
-		uint16 player2;
 		uint16 matchId;
+		uint16 player1Id;
+		uint16 player2Id;
+		uint8 player1Score;
+		uint8 player2Score;
 		uint8 level;
 	}
 
@@ -25,8 +27,9 @@ contract TournamentFactory is PlayersFactory, PlayersActions {
 
 	Tournament[] public tournaments;
 
-	function _defineNumberOfPlayers(uint8 numberOfRegisteredPlayers)
-	private pure returns (uint8) {
+	function _defineNumberOfPlayers(
+		uint8 numberOfRegisteredPlayers
+	) private pure returns (uint8) {
 		uint8 n = 2;
 		while (n < numberOfRegisteredPlayers) {
 			n *= 2;
@@ -34,9 +37,13 @@ contract TournamentFactory is PlayersFactory, PlayersActions {
 		return n;
 	}
 
-	function _fullListOfPlayers(uint16[] memory playersIds, uint8 numberOfRegisteredPlayers)
-	private returns (uint16[] memory newPlayerIds) {
-		uint8 numberOfPlayers = _defineNumberOfPlayers(numberOfRegisteredPlayers);
+	function _fullListOfPlayers(
+		uint16[] memory playersIds,
+		uint8 numberOfRegisteredPlayers
+	) private returns (uint16[] memory newPlayerIds) {
+		uint8 numberOfPlayers = _defineNumberOfPlayers(
+			numberOfRegisteredPlayers
+		);
 		uint8 numberOfAiPlayers = numberOfPlayers - numberOfRegisteredPlayers;
 
 		uint16[] memory fullList = new uint16[](numberOfPlayers);
@@ -54,12 +61,19 @@ contract TournamentFactory is PlayersFactory, PlayersActions {
 			if (i > 0) {
 				aiPlayersList = listAiPlayers();
 			}
+			bool[] memory used = new bool[](aiPlayersList.length);
 			for (i = 0; i < numberOfAiPlayers; i++) {
 				uint randIndex = uint(
 					keccak256(
 						abi.encodePacked(block.timestamp, block.prevrandao, i)
 					)
 				) % aiPlayersList.length;
+				uint attempts = 0;
+				while (used[randIndex] && attempts < aiPlayersList.length) {
+					randIndex = (randIndex + 1) % aiPlayersList.length;
+					attempts++;
+				}
+				used[randIndex] = true;
 				fullList[playersIds.length + i] = aiPlayersList[randIndex];
 			}
 		}
@@ -67,20 +81,24 @@ contract TournamentFactory is PlayersFactory, PlayersActions {
 		return fullList;
 	}
 
-	function _createMatches(uint16[] memory playersIds) private returns (Match[] memory) {
+	function _createMatches(
+		uint16[] memory playersIds
+	) private returns (Match[] memory) {
 		uint8 numberOfRegisteredPlayers = uint8(playersIds.length);
 		uint16[] memory fullListOfPlayers = _fullListOfPlayers(
 			playersIds,
 			numberOfRegisteredPlayers
 		);
-		Match[] memory matches = new Match[](numberOfRegisteredPlayers / 2);
-		Match[] memory matchesRef = matches;
+		uint8 totalPlayers = uint8(fullListOfPlayers.length);
+		Match[] memory matches = new Match[](totalPlayers / 2);
 
-		for (uint8 i = 0; i < numberOfRegisteredPlayers; i += 2) {
-			matchesRef[i / 2] = Match({
-				player1: fullListOfPlayers[i],
-				player2: fullListOfPlayers[i + 1],
+		for (uint8 i = 0; i < totalPlayers; i += 2) {
+			matches[i / 2] = Match({
 				matchId: matchCount,
+				player1Id: fullListOfPlayers[i],
+				player2Id: fullListOfPlayers[i + 1],
+				player1Score: 0,
+				player2Score: 0,
 				level: 0
 			});
 			matchCount++;
@@ -89,7 +107,10 @@ contract TournamentFactory is PlayersFactory, PlayersActions {
 		return matches;
 	}
 
-	function createTournament(string memory tournamentName, uint16[] memory playersIds) public {
+	function createTournament(
+		string memory tournamentName,
+		uint16[] memory playersIds
+	) public {
 		require(
 			playersIds.length <= 16,
 			"Number of players exeeds the maximum allowed"
@@ -97,7 +118,10 @@ contract TournamentFactory is PlayersFactory, PlayersActions {
 
 		for (uint i = 0; i < playersIds.length; i++) {
 			for (uint j = i + 1; j < playersIds.length; j++) {
-				require(playersIds[i] != playersIds[j], "Duplicate player ID found");
+				require(
+					playersIds[i] != playersIds[j],
+					"Duplicate player ID found"
+				);
 			}
 		}
 
@@ -108,5 +132,12 @@ contract TournamentFactory is PlayersFactory, PlayersActions {
 		});
 
 		tournaments.push(newTournament);
+		tournamentCount++;
+	}
+
+	function getTournamentMatches(
+		uint tournamentId
+	) public view returns (Match[] memory) {
+		return tournaments[tournamentId].matches;
 	}
 }
