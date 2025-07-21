@@ -27,4 +27,9 @@ contract PlayersActions is PlayersHelper {
 		emit PlayerLost(playerId, players[playerId].lossCount);
 	}
 
+	function addMatchPlayed(uint16 playerId, uint16 matchId)
+	checkPlayerExistence(playerId) internal {
+
+	}
+
 }
