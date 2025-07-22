@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.30;
 
-import "./playersfactory.sol";
 import "./playersactions.sol";
 
 contract TournamentFactory is PlayersFactory, PlayersActions {
@@ -12,21 +11,23 @@ contract TournamentFactory is PlayersFactory, PlayersActions {
 	uint16 public matchCount = 0;
 
 	struct Match {
-		uint16 matchId;
-		uint16 player1Id;
-		uint16 player2Id;
-		uint8 player1Score;
-		uint8 player2Score;
-		uint8 level;
+		uint16	matchId;
+		uint16	tournamentId;
+		uint16	player1Id;
+		uint16	player2Id;
+		uint8	player1Score;
+		uint8	player2Score;
+		uint8	level;
 	}
 
 	struct Tournament {
-		string name;
-		uint16 tournamentId;
-		Match[] matches;
+		string		name;
+		uint16		tournamentId;
+		uint16[]	matchesIds;
 	}
 
-	Tournament[] public tournaments;
+	Tournament[] public	tournaments;
+	Match[] public		matches;
 
 	function _defineNumberOfPlayers(
 		uint8 numberOfRegisteredPlayers
@@ -82,30 +83,32 @@ contract TournamentFactory is PlayersFactory, PlayersActions {
 		return fullList;
 	}
 
-	function _createMatches(
-		uint16[] memory playersIds
-	) private returns (Match[] memory) {
+	function _addMatchToTournament(Match memory matchToAdd, uint16 tournamentId) internal {
+		matches.push(matchToAdd);
+		tournaments[tournamentId].matchesIds.push(matchToAdd.matchId);
+		matchCount++;
+	}
+
+	function _createInitialMatches(uint16[] memory playersIds, uint16 tournamentId) private {
 		uint8 numberOfRegisteredPlayers = uint8(playersIds.length);
 		uint16[] memory fullListOfPlayers = _fullListOfPlayers(
 			playersIds,
 			numberOfRegisteredPlayers
 		);
 		uint8 totalPlayers = uint8(fullListOfPlayers.length);
-		Match[] memory matches = new Match[](totalPlayers / 2);
 
 		for (uint8 i = 0; i < totalPlayers; i += 2) {
-			matches[i / 2] = Match({
+			Match memory newMatch = Match({
 				matchId: matchCount,
+				tournamentId: tournamentId,
 				player1Id: fullListOfPlayers[i],
 				player2Id: fullListOfPlayers[i + 1],
 				player1Score: 0,
 				player2Score: 0,
 				level: 0
 			});
-			matchCount++;
+			_addMatchToTournament(newMatch, tournamentId);
 		}
-
-		return matches;
 	}
 
 	function createTournament(
@@ -129,17 +132,12 @@ contract TournamentFactory is PlayersFactory, PlayersActions {
 		Tournament memory newTournament = Tournament({
 			name: tournamentName,
 			tournamentId: tournamentCount,
-			matches: _createMatches(playersIds)
+			matchesIds: new uint16[](0)
 		});
-
 		tournaments.push(newTournament);
-		emit NewTournament(newTournament.tournamentId, newTournament.name);
+		_createInitialMatches(playersIds, tournamentCount);
 		tournamentCount++;
+		emit NewTournament(newTournament.tournamentId, newTournament.name);
 	}
 
-	function getTournamentMatches(
-		uint tournamentId
-	) public view returns (Match[] memory) {
-		return tournaments[tournamentId].matches;
-	}
 }

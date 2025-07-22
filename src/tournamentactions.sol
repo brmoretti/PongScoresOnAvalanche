@@ -6,49 +6,39 @@ import "./tournamenthelper.sol";
 contract TournamentActions is TournamentHelper {
 
 	function _scoreRegister(
-		uint16 tournamentId,
-		uint16 matchId,
-		uint8 player1Score,
-		uint8 player2Score) private {
-		tournaments[tournamentId].matches[matchId].player1Score = player1Score;
-		tournaments[tournamentId].matches[matchId].player2Score = player2Score;
-	}
-
-	function _addMatch(
-		uint16 tournamentId,
-		Match memory matchToAdd)
-		checkTournamentExistence(tournamentId) private {
-		tournaments[tournamentId].matches.push(matchToAdd);
-		matchCount++;
-	}
-
-	function endMatch (uint16 tournamentId,
 		uint16 matchId,
 		uint8 player1Score,
 		uint8 player2Score)
-		checkTournamentExistence(tournamentId)
+		checkMatchExistence(matchId) private {
+		matches[matchId].player1Score = player1Score;
+		matches[matchId].player2Score = player2Score;
+	}
+
+	function endMatch (uint16 matchId,
+		uint8 player1Score,
+		uint8 player2Score)
 		checkMatchExistence(matchId) public {
-		_scoreRegister(tournamentId, matchId, player1Score, player2Score);
+		_scoreRegister(matchId, player1Score, player2Score);
+		uint16 tournamentId = matches[matchId].tournamentId;
 		Tournament storage tournament = tournaments[tournamentId];
 
-		uint16 winner = player1Score > player2Score ?
-				tournament.matches[matchId].player1Id :
-				tournament.matches[matchId].player2Id;
+		uint16 lastMatchCreatedId = tournament.matchesIds[tournament.matchesIds.length - 1];
+		uint8 level = matches[matchId].level;
+		uint8 tournamentCurrentLevel = matches[lastMatchCreatedId].level;
 
-		uint8 level = tournament.matches[matchId].level;
-
-		if (level == tournament.matches[tournament.matches.length - 1].level) {
+		if (level == tournamentCurrentLevel) {
 			Match memory newMatch = Match({
 				matchId: matchCount,
-				player1Id: winner,
+				tournamentId: tournamentId,
+				player1Id: getMatchWinner(matchId),
 				player2Id: 0xFFFF,
 				player1Score: 0,
 				player2Score: 0,
 				level: level + 1
 			});
-			_addMatch(tournamentId, newMatch);
-		} else if (level == tournament.matches[tournament.matches.length - 1].level - 1) {
-			tournament.matches[tournament.matches.length - 1].player2Id = winner;
+			_addMatchToTournament(newMatch, tournamentId);
+		} else if (level == tournamentCurrentLevel - 1) {
+			matches[lastMatchCreatedId].player2Id = getMatchWinner(matchId);
 		}
 	}
 
