@@ -2,14 +2,14 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
 describe("TournamentFactory Integration", function () {
-	let TournamentFactory;
+	let TournamentHelper;
 	let factory;
 	let owner;
 
 	beforeEach(async function () {
 		[owner] = await ethers.getSigners();
-		TournamentFactory = await ethers.getContractFactory("TournamentFactory");
-		factory = await TournamentFactory.deploy();
+		TournamentHelper = await ethers.getContractFactory("TournamentHelper");
+		factory = await TournamentHelper.deploy();
 		await factory.waitForDeployment();
 	});
 
