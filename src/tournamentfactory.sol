@@ -6,6 +6,7 @@ import "./playersactions.sol";
 contract TournamentFactory is PlayersFactory, PlayersActions {
 
 	event NewTournament(uint16 tounamentId, string tournamentName);
+	event NewMatch(uint16 matchId);
 
 	uint16 public tournamentCount = 0;
 	uint16 public matchCount = 0;
@@ -21,6 +22,7 @@ contract TournamentFactory is PlayersFactory, PlayersActions {
 	}
 
 	struct Tournament {
+		bool		ended;
 		string		name;
 		uint16		tournamentId;
 		uint16[]	matchesIds;
@@ -87,6 +89,7 @@ contract TournamentFactory is PlayersFactory, PlayersActions {
 		matches.push(matchToAdd);
 		tournaments[tournamentId].matchesIds.push(matchToAdd.matchId);
 		matchCount++;
+		emit NewMatch(matchToAdd.matchId);
 	}
 
 	function _createInitialMatches(uint16[] memory playersIds, uint16 tournamentId) private {
@@ -130,6 +133,7 @@ contract TournamentFactory is PlayersFactory, PlayersActions {
 		}
 
 		Tournament memory newTournament = Tournament({
+			ended: false,
 			name: tournamentName,
 			tournamentId: tournamentCount,
 			matchesIds: new uint16[](0)

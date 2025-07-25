@@ -5,6 +5,9 @@ import "./tournamenthelper.sol";
 
 contract TournamentActions is TournamentHelper {
 
+	event MatchEnded(uint16 matchId);
+	event TournamentEnded(uint16 tournamentId);
+
 	function _scoreRegister(
 		uint16 matchId,
 		uint8 player1Score,
@@ -23,6 +26,14 @@ contract TournamentActions is TournamentHelper {
 		Tournament storage tournament = tournaments[tournamentId];
 
 		uint16 lastMatchCreatedId = tournament.matchesIds[tournament.matchesIds.length - 1];
+
+		if (lastMatchCreatedId == matchId) {
+			tournament.ended = true;
+			emit MatchEnded(matchId);
+			emit TournamentEnded(tournamentId);
+			return;
+		}
+
 		uint8 level = matches[matchId].level;
 		uint8 tournamentCurrentLevel = matches[lastMatchCreatedId].level;
 
