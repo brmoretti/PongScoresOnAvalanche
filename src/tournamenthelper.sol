@@ -11,7 +11,7 @@ contract TournamentHelper is TournamentFactory {
 	}
 
 	modifier checkMatchExistence(uint16 matchId) {
-		require(matchId < tournamentCount, "Match does not exist");
+		require(matchId < matchCount, "Match does not exist");
 		_;
 	}
 

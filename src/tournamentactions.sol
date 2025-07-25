@@ -35,9 +35,9 @@ contract TournamentActions is TournamentHelper {
 		}
 
 		uint8 level = matches[matchId].level;
-		uint8 tournamentCurrentLevel = matches[lastMatchCreatedId].level;
+		uint16 player2OfLastMatchId = matches[lastMatchCreatedId].player2Id;
 
-		if (level == tournamentCurrentLevel) {
+		if (player2OfLastMatchId != 0xFFFF) {
 			Match memory newMatch = Match({
 				matchId: matchCount,
 				tournamentId: tournamentId,
@@ -48,7 +48,7 @@ contract TournamentActions is TournamentHelper {
 				level: level + 1
 			});
 			_addMatchToTournament(newMatch, tournamentId);
-		} else if (level == tournamentCurrentLevel - 1) {
+		} else if (player2OfLastMatchId == 0xFFFF) {
 			matches[lastMatchCreatedId].player2Id = getMatchWinner(matchId);
 		}
 	}
